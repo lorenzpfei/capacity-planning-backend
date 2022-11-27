@@ -21,8 +21,9 @@ class OAuthController extends Controller
     {
         $socialiteUser = Socialite::driver($provider)->user();
 
+        //todo changeme to correct token names
         User::where('email', $socialiteUser->getEmail())
-            ->update(['tracking_token' => $socialiteUser->getId()]);
+            ->update(['tracking_token' => $socialiteUser->token, 'tracking_refresh_token' => $socialiteUser->refreshToken]);
 
         //Redirect
         return redirect('');

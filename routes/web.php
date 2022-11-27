@@ -14,8 +14,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
+Route::get('/', static function () {
     return view('welcome');
+});
+
+Route::get('/test', static function () {
+    return \App\Services\Tasks\AsanaTaskApi::getAssignedTasksForUser(\App\Models\User::find(1));
 });
 
 Route::get('oauth/{provider}', [OAuthController::class, 'redirectToProvider']);

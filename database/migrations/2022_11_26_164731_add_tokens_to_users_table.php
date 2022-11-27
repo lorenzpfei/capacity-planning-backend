@@ -16,6 +16,8 @@ return new class extends Migration
         Schema::table('users', static function (Blueprint $table) {
             $table->string('task_token');
             $table->string('tracking_token');
+            $table->string('tracking_refresh_token');
+            //todo changeme to correct token names
         });
     }
 
