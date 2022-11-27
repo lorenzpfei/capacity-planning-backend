@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,3 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('oauth/{provider}', [OAuthController::class, 'redirectToProvider']);
+Route::get('oauth/{provider}/callback', [OAuthController::class, 'handleProviderCallback']);
