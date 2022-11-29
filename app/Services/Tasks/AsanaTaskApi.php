@@ -3,6 +3,7 @@
 namespace App\Services\Tasks;
 
 use App\Contracts\TaskService;
+use App\Models\Task;
 use App\Models\User;
 use Asana\Client;
 use Illuminate\Support\Facades\Http;
@@ -22,10 +23,54 @@ class AsanaTaskApi implements TaskService
 
         $tasks = [];
         foreach ($userTaskLists as $userTaskList) {
-            $tasks[] = self::getTasksByUserTaskList($user, $userTaskList['gid']);
+            foreach (self::getTasksByUserTaskList($user, $userTaskList['gid']) as $task) {
+                $tasks[] = $task;
+            }
         }
 
-        dd($tasks);
+        $dbData = [];
+        foreach ($tasks as $task) {
+            $dbTask = [];
+            $dbTask['id'] = (int)$task['gid'];
+            $dbTask['name'] = $task['name'];
+            $dbTask['task_user_id'] = $user->task_user_id;
+            $dbTask['completed'] = null;
+            if($task['completed_at'] !== null)
+            {
+                $dbTask['completed'] = $task['completed_at'];
+            }
+
+            $dbTask['due'] = null;
+            if ($task['due_on'] !== null || $task['due_at'] !== null) {
+                $dbTask['due'] = $task['due_on'] ?: $task['due_at'];
+            }
+            $dbTask['start'] = null;
+            if ($task['start_on'] !== null || $task['start_at'] !== null) {
+                $dbTask['start'] = $task['start_on'] ?: $task['start_at'];
+            }
+
+            $dbTask['custom_fields'] = null;
+            $dbTask['priority'] = null;
+            if (isset($task['custom_fields']) && count($task['custom_fields']) > 0) {
+                $dbTask['custom_fields'] = [];
+                foreach ($task['custom_fields'] as $customField) {
+                    if ($customField['name'] === 'Priorität') {
+                        $dbTask['priority'] = $customField['display_value'];
+                    } else {
+                        $dbTask['custom_fields'][] = [$customField['name'] => $customField['display_value']];
+                    }
+                }
+                $dbTask['custom_fields'] = json_encode($dbTask['custom_fields']);
+            }
+
+            $dbData[] = $dbTask;
+        }
+        Task::upsert($dbData,
+            'id',
+            ['id', 'name', 'task_user_id', 'completed', 'due', 'start', 'custom_fields', 'priority']
+        );
+
+        dd('done');
         return $asanaUserClient->get('/user_task_lists/' . $userTaskList->gid . '/tasks?completed_since=now&opt_fields=name,completed_at,start_on,due_on,due_at,start_at,custom_fields', []);
     }
 
