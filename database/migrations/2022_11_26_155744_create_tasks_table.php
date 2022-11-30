@@ -23,6 +23,9 @@ return new class extends Migration
             $table->dateTime('start')->nullable();
             $table->string('priority')->nullable();
             $table->text('custom_fields')->nullable();
+            $table->integer('task_total')->nullable();
+            $table->tinyText('task_users')->nullable();
+            $table->integer('task_estimate')->nullable();
             $table->timestamps();
         });
     }

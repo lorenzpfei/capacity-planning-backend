@@ -5,14 +5,18 @@ namespace App\Services\Tasks;
 use App\Contracts\TaskService;
 use App\Models\Task;
 use App\Models\User;
-use Asana\Client;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Http;
-use Laravel\Socialite\Facades\Socialite;
 
 class AsanaTaskApi implements TaskService
 {
 
-    public static function getAssignedTasksForUser(User $user, string $from = '', string $to = ''): array
+    public static function getAssignedTasksForUser(User $user, string $from = '', string $to = ''): Collection
+    {
+        return Task::where('task_user_id', '=', $user->task_user_id)->get();
+    }
+
+    public static function importTasksForUser(User $user, string $from = '', string $to = ''): int
     {
         $workspaces = self::getWorkspacesForUser($user);
 
@@ -65,13 +69,11 @@ class AsanaTaskApi implements TaskService
 
             $dbData[] = $dbTask;
         }
-        Task::upsert($dbData,
+
+        return Task::upsert($dbData,
             'id',
             ['id', 'name', 'task_user_id', 'completed', 'due', 'start', 'custom_fields', 'priority']
         );
-
-        dd('done');
-        return $asanaUserClient->get('/user_task_lists/' . $userTaskList->gid . '/tasks?completed_since=now&opt_fields=name,completed_at,start_on,due_on,due_at,start_at,custom_fields', []);
     }
 
     public static function getWorkspacesForUser(User $user)
