@@ -13,5 +13,5 @@ interface TaskService
      * @param string $to
      * @return Collection
      */
-    public static function getAssignedTasksForUser(User $user, string $from, string $to): Collection;
+    public function getAssignedTasksForUser(User $user, string $from, string $to): Collection;
 }

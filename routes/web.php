@@ -18,12 +18,12 @@ Route::get('/', static function () {
     return view('welcome');
 });
 
-
+//todo: Remove debug
 Route::get('/test', static function () {
-
-    return \App\Services\Tasks\AsanaTaskApi::getAssignedTasksForUser(\App\Models\User::find(1));;
+    return \App\Services\Tasks\AsanaTaskApi::getAssignedTasksForUser(\App\Models\User::find(1));
 });
 
+//todo: move to console
 Route::get('/import', static function(){
     \App\Services\Tasks\AsanaTaskApi::importTasksForUser(\App\Models\User::find(1));
     $tasks = \App\Services\Tasks\AsanaTaskApi::getAssignedTasksForUser(\App\Models\User::find(1));

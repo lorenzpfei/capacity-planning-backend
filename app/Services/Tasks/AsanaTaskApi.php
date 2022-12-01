@@ -11,23 +11,19 @@ use Illuminate\Support\Facades\Http;
 class AsanaTaskApi implements TaskService
 {
 
-    public static function getAssignedTasksForUser(User $user, string $from = '', string $to = ''): Collection
+    public function getAssignedTasksForUser(User $user, string $from = '', string $to = ''): Collection
     {
         return Task::where('task_user_id', '=', $user->task_user_id)->get();
     }
 
-    public static function importTasksForUser(User $user, string $from = '', string $to = ''): int
+    public function importTasksForUser(User $user, string $from = '', string $to = ''): int
     {
-        $workspaces = self::getWorkspacesForUser($user);
-
-        $userTaskLists = [];
-        foreach ($workspaces as $workspace) {
-            $userTaskLists[] = self::getUserTaskListsByWorkspace($user, $workspace['gid']);
-        }
+        $workspaces = $this->getWorkspacesForUser($user);
 
         $tasks = [];
-        foreach ($userTaskLists as $userTaskList) {
-            foreach (self::getTasksByUserTaskList($user, $userTaskList['gid']) as $task) {
+        foreach ($workspaces as $workspace) {
+            $userTaskListId = $this->getUserTaskListsByWorkspace($user, $workspace['gid'])['gid'];
+            foreach ($this->getTasksByUserTaskList($user, $userTaskListId) as $task) {
                 $tasks[] = $task;
             }
         }
@@ -39,8 +35,7 @@ class AsanaTaskApi implements TaskService
             $dbTask['name'] = $task['name'];
             $dbTask['task_user_id'] = $user->task_user_id;
             $dbTask['completed'] = null;
-            if($task['completed_at'] !== null)
-            {
+            if ($task['completed_at'] !== null) {
                 $dbTask['completed'] = $task['completed_at'];
             }
 
@@ -76,19 +71,19 @@ class AsanaTaskApi implements TaskService
         );
     }
 
-    public static function getWorkspacesForUser(User $user)
+    public function getWorkspacesForUser(User $user)
     {
-        return self::get('/workspaces', $user);
+        return $this->get('/workspaces', $user);
     }
 
-    private static function getTasksByUserTaskList(User $user, string $userTaskListId)
+    private function getTasksByUserTaskList(User $user, string $userTaskListId)
     {
-        return self::get('/user_task_lists/' . $userTaskListId . '/tasks?completed_since=now&opt_fields=' . config('services.asana.optfields'), $user);
+        return $this->get('/user_task_lists/' . $userTaskListId . '/tasks?completed_since=now&opt_fields=' . config('services.asana.optfields'), $user);
     }
 
-    private static function getUserTaskListsByWorkspace(User $user, string $workspaceId)
+    private function getUserTaskListsByWorkspace(User $user, string $workspaceId)
     {
-        return self::get('/users/' . $user->task_user_id . '/user_task_list?workspace=' . $workspaceId, $user);
+        return $this->get('/users/' . $user->task_user_id . '/user_task_list?workspace=' . $workspaceId, $user);
     }
 
     /**
@@ -96,10 +91,11 @@ class AsanaTaskApi implements TaskService
      * @param User $user
      * @return array|mixed
      */
-    private static function get(string $url, User $user)
+    private function get(string $url, User $user)
     {
         $response = Http::withHeaders(['Authorization' => 'Bearer ' . $user->task_token])->get('https://app.asana.com/api/1.0' . $url);
         $respBody = $response->json();
+
         if (isset($respBody['errors'])) {
             $token = self::refreshToken($user);
             $response = Http::withHeaders(['Authorization' => 'Bearer ' . $token])->get('https://app.asana.com/api/1.0' . $url);
