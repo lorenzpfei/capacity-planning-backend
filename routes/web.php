@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +14,21 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
+Route::get('/', static function () {
     return view('welcome');
 });
+
+//todo: Remove debug
+Route::get('/test', static function () {
+    return \App\Services\Tasks\AsanaTaskApi::getAssignedTasksForUser(\App\Models\User::find(1));
+});
+
+//todo: move to console
+Route::get('/import', static function(){
+    \App\Services\Tasks\AsanaTaskApi::importTasksForUser(\App\Models\User::find(1));
+    $tasks = \App\Services\Tasks\AsanaTaskApi::getAssignedTasksForUser(\App\Models\User::find(1));
+    \App\Services\Tracking\EverhourTrackingApi::importTrackingDataForTasks($tasks, 'as:');
+});
+
+Route::get('oauth/{provider}', [OAuthController::class, 'redirectToProvider']);
+Route::get('oauth/{provider}/callback', [OAuthController::class, 'handleProviderCallback']);

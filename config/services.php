@@ -31,4 +31,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'asana' => [
+        'client_id' => env('ASANA_CLIENT_ID'),
+        'client_secret' => env('ASANA_CLIENT_SECRET'),
+        'redirect' => env('ASANA_REDIRECT_URI'),
+        'optfields' => env('ASANA_OPTFIELDS')
+    ],
+
+    'everhour' => [
+        'api_key' => env('EVERHOUR_API_KEY'),
+    ],
 ];
