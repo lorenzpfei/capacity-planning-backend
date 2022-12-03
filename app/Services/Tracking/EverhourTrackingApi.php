@@ -4,6 +4,7 @@ namespace App\Services\Tracking;
 
 use App\Contracts\TrackingService;
 use App\Models\Task;
+use App\Models\Timeoff;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Http;
@@ -15,7 +16,7 @@ class EverhourTrackingApi implements TrackingService
         $firstElement = true;
 
         /** @var Task $task */
-        foreach ($tasks as $key => $task) {
+        foreach ($tasks as $task) {
             $everhourTask = $this->getEverhourDataForTask($task, $prefix);
 
             //set correct everhour user id
@@ -45,9 +46,9 @@ class EverhourTrackingApi implements TrackingService
      *
      * @param string $from
      * @param string $to
-     * @return bool
+     * @return array
      */
-    public function importTimeoffs(string $from = '', string $to = ''): bool
+    public function importTimeoffs(string $from = '', string $to = ''): array
     {
         $url = 'https://api.everhour.com/resource-planner/assignments?from=' . $from . '&to=' . $to;
         $request = Http::withHeaders([
@@ -55,7 +56,7 @@ class EverhourTrackingApi implements TrackingService
         ]);
 
         $aggregatedTimeoffs = [];
-        foreach($request->get($url)->json() as $timeoff) {
+        foreach ($request->get($url)->json() as $timeoff) {
             $time = $timeoff['time'] ?? null;
             $timeOffPeriod = $timeoff['timeOffPeriod'] ?? null;
 
@@ -71,11 +72,27 @@ class EverhourTrackingApi implements TrackingService
             $aggregatedTimeoffs[$timeoff['user']['id']][] = $dbData;
         }
 
-        foreach ($aggregatedTimeoffs as $key => $aggregatedTimeoff)
-        {
-            User::where('tracking_user_id', '=', $key)?->update(['timeoffs' => json_encode($aggregatedTimeoff)]);
+
+        $upsertAmount = 0;
+        foreach ($aggregatedTimeoffs as $key => $aggregatedTimeoff) {
+            $user = User::where('tracking_user_id', '=', $key)->first();
+            if ($user !== null) {
+                foreach($aggregatedTimeoff as $aggegatedKey => $singleTimeoff)
+                {
+                    $aggregatedTimeoff[$aggegatedKey]['user_id'] = $user->id;
+                    $aggregatedTimeoff[$aggegatedKey]['id'] = $user->id . '_' . $singleTimeoff['start'];
+                }
+
+                $upsertAmount = Timeoff::upsert($aggregatedTimeoff,
+                    ['id'],
+                    ['id', 'user_id', 'reason', 'paid', 'start', 'end', 'type', 'time', 'time_off_period']
+                );
+            }
         }
-        return true;
+        return [
+            'upserts' => $upsertAmount,
+            'users' => count($aggregatedTimeoffs)
+        ];
     }
 
     private function setTaskUserId(User $user, int $trackingUserId)
