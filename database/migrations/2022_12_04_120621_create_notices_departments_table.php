@@ -15,10 +15,8 @@ return new class extends Migration
     {
         Schema::create('notices_departments', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->unsignedBigInteger('notice_id');
-            $table->foreign('notice_id')->references('id')->on('notices');
-            $table->unsignedBigInteger('department_id');
-            $table->foreign('department_id')->references('id')->on('departments');
+            $table->foreignId('notice_id')->constrained('notices');
+            $table->foreignId('department_id')->constrained('departments');
             $table->timestamps();
         });
     }

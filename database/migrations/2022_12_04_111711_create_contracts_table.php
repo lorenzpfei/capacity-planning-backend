@@ -15,8 +15,7 @@ return new class extends Migration
     {
         Schema::create('contracts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreignId('user_id')->constrained();
             $table->timestamp('from');
             $table->timestamp('to')->nullable();
             $table->tinyInteger('hours_per_week');

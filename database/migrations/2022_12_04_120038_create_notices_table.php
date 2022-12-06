@@ -18,8 +18,7 @@ return new class extends Migration
             $table->string('headline');
             $table->text('text');
             $table->string('type');
-            $table->unsignedBigInteger('creator_user_id');
-            $table->foreign('creator_user_id')->references('id')->on('users');
+            $table->foreignId('creator_user_id')->constrained('users');
             $table->boolean('deleted')->default(0);
             $table->timestamps();
         });
