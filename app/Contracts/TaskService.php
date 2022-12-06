@@ -8,10 +8,9 @@ use Illuminate\Database\Eloquent\Collection;
 interface TaskService
 {
     /**
-     * @param User $user
      * @param string $from
      * @param string $to
      * @return Collection
      */
-    public function getAssignedTasksForUser(User $user, string $from, string $to): Collection;
+    public function getAssignedTasksForUser(string $from, string $to): Collection;
 }
