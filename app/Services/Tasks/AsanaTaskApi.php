@@ -20,7 +20,7 @@ class AsanaTaskApi implements TaskService
 
     public function getAssignedTasksForUser(string $from = '', string $to = ''): Collection
     {
-        return Task::where('task_user_id', '=', $this->user->task_user_id)->get();
+        return Task::where('task_user_id', $this->user->task_user_id)->get();
     }
 
     public function importTasksForUser(string $from = '', string $to = ''): int
