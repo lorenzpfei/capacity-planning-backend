@@ -19,9 +19,6 @@ Route::get('/', static function () {
 });
 
 //todo: Remove debug
-Route::get('/test', static function () {
-    //
-});
 
 Route::get('oauth/{provider}', [OAuthController::class, 'redirectToProvider']);
 Route::get('oauth/{provider}/callback', [OAuthController::class, 'handleProviderCallback']);
