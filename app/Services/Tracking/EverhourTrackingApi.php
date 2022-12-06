@@ -22,8 +22,8 @@ class EverhourTrackingApi implements TrackingService
             //set correct everhour user id
             if ($firstElement) {
                 $this->setTaskUserId(User::firstWhere('task_user_id', '=', $task->task_user_id), $everhourTask['assignees'][0]['userId']);
+                $firstElement = false;
             }
-            $firstElement = false;
 
             $task->task_total = $everhourTask['time']['total'] ?? null;
             $task->task_users = isset($everhourTask['time']['users']) ? json_encode($everhourTask['time']['users']) : null;
