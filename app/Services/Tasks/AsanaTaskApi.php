@@ -20,7 +20,7 @@ class AsanaTaskApi implements TaskService
 
     public function getAssignedTasksForUser(string $from = '', string $to = ''): Collection
     {
-        return Task::where('task_user_id', $this->user->task_user_id)->get();
+        return Task::where('assigned_user_id', $this->user->task_user_id)->get();
     }
 
     public function importTasksForUser(string $from = '', string $to = ''): int
@@ -40,7 +40,14 @@ class AsanaTaskApi implements TaskService
             $dbTask = [];
             $dbTask['id'] = (int)$task['gid'];
             $dbTask['name'] = $task['name'];
-            $dbTask['task_user_id'] = $this->user->task_user_id;
+            $dbTask['assigned_user_id'] = $this->user->id;
+            $dbTask['created_at'] = date('Y-m-d H:i:s', strtotime($task['created_at']));
+
+            $creator = $this->user;
+            if((string)$task['created_by']['gid'] !== (string)$this->user->task_user_id) {
+                $creator = User::firstWhere('task_user_id', $task['created_by']['gid']);
+            }
+            $dbTask['creator_user_id'] = $creator?->id;
             $dbTask['completed'] = null;
             if ($task['completed_at'] !== null) {
                 $dbTask['completed'] = $task['completed_at'];
@@ -74,7 +81,7 @@ class AsanaTaskApi implements TaskService
 
         return Task::upsert($dbData,
             'id',
-            ['id', 'name', 'task_user_id', 'completed', 'due', 'start', 'custom_fields', 'priority']
+            ['id', 'name', 'assigned_user_id', 'created_at', 'creator_user_id', 'completed', 'due', 'start', 'custom_fields', 'priority']
         );
     }
 

@@ -15,17 +15,17 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('task_user_id')->nullable();
-            $table->foreign('task_user_id')->references('task_user_id')->on('users');
+            $table->foreignId('assigned_user_id')->constrained('users');
             $table->string('name');
             $table->dateTime('completed')->nullable();
             $table->dateTime('due')->nullable();
             $table->dateTime('start')->nullable();
             $table->string('priority')->nullable();
             $table->text('custom_fields')->nullable();
-            $table->integer('task_total')->nullable();
-            $table->tinyText('task_users')->nullable();
-            $table->integer('task_estimate')->nullable();
+            $table->integer('tracking_total')->nullable();
+            $table->tinyText('tracking_users')->nullable();
+            $table->integer('tracking_estimate')->nullable();
+            $table->foreignId('creator_user_id')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

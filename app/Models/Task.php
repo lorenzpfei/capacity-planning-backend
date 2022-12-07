@@ -8,4 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Task extends Model
 {
     use HasFactory;
+
+    //disable automatic timestamps
+    public $timestamps = false;
 }
