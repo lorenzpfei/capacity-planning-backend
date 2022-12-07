@@ -26,7 +26,16 @@ class EverhourTrackingApi implements TrackingService
             }
 
             $task->tracking_total = $everhourTask['time']['total'] ?? null;
-            $task->tracking_users = isset($everhourTask['time']['users']) ? json_encode($everhourTask['time']['users']) : null;
+            if(isset($everhourTask['time']['users'])) {
+                $users = $everhourTask['time']['users'];
+                $task->tracking_users = json_encode($users);
+
+                //sort array desc and keep keys
+                uasort($users, static function($a, $b) {
+                    return $b <=> $a;
+                });
+                $task->tracking_highest_time_user_id = User::firstWhere('tracking_user_id', array_keys($users)[0])?->id;
+            }
             $task->tracking_estimate = $everhourTask['estimate']['total'] ?? null;
             $task->save();
         }
