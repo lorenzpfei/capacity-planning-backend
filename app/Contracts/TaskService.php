@@ -3,14 +3,17 @@
 namespace App\Contracts;
 
 use App\Models\User;
+use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 
 interface TaskService
 {
     /**
-     * @param string $from
-     * @param string $to
-     * @return Collection
+     * Get tasks by user
+     *
+     * @param DateTime $from
+     * @param DateTime $to
+     * @return Collection Task Collection
      */
-    public function getAssignedTasksForUser(string $from, string $to): Collection;
+    public function getAssignedTasksForUser(DateTime $from, DateTime $to): Collection;
 }

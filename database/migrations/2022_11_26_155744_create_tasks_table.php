@@ -25,6 +25,7 @@ return new class extends Migration
             $table->integer('tracking_total')->nullable();
             $table->tinyText('tracking_users')->nullable();
             $table->integer('tracking_estimate')->nullable();
+            $table->foreignId('tracking_highest_time_user_id')->nullable()->constrained('users');
             $table->foreignId('creator_user_id')->nullable()->constrained('users');
             $table->timestamps();
         });

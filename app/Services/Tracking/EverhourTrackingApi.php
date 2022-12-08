@@ -6,11 +6,19 @@ use App\Contracts\TrackingService;
 use App\Models\Task;
 use App\Models\Timeoff;
 use App\Models\User;
+use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Http;
 
 class EverhourTrackingApi implements TrackingService
 {
+    /**
+     * Updates tasks in database with everhour tracking data by given tasks collection
+     *
+     * @param Collection $tasks Collection of Task Entity
+     * @param string $prefix Everhour Task Prefix (e.g. ev:)
+     * @return void
+     */
     public function importTrackingDataForTasks(Collection $tasks, string $prefix = 'ev:')
     {
         $firstElement = true;
@@ -26,12 +34,26 @@ class EverhourTrackingApi implements TrackingService
             }
 
             $task->tracking_total = $everhourTask['time']['total'] ?? null;
-            $task->tracking_users = isset($everhourTask['time']['users']) ? json_encode($everhourTask['time']['users']) : null;
+            if(isset($everhourTask['time']['users'])) {
+                $users = $everhourTask['time']['users'];
+                $task->tracking_users = json_encode($users);
+
+                //sort array desc and keep keys
+                arsort($users, SORT_NUMERIC);
+                $task->tracking_highest_time_user_id = User::firstWhere('tracking_user_id', array_keys($users)[0])?->id;
+            }
             $task->tracking_estimate = $everhourTask['estimate']['total'] ?? null;
             $task->save();
         }
     }
 
+    /**
+     * Gets everhour tracking data
+     *
+     * @param Task $task Single Task
+     * @param string $prefix Everhour Task Prefix (e.g. ev:)
+     * @return array|mixed Everhour data or everhour error data
+     */
     public function getEverhourDataForTask(Task $task, string $prefix = 'ev:')
     {
         $url = 'https://api.everhour.com/tasks/' . $prefix . $task->id;
@@ -44,13 +66,13 @@ class EverhourTrackingApi implements TrackingService
     /**
      * Get aggregated timeoffs for users and write them into db
      *
-     * @param string $from
-     * @param string $to
-     * @return array
+     * @param DateTime $from
+     * @param DateTime $to
+     * @return array amount of upserts and users
      */
-    public function importTimeoffs(string $from = '', string $to = ''): array
+    public function importTimeoffs(DateTime $from, DateTime $to): array
     {
-        $url = 'https://api.everhour.com/resource-planner/assignments?from=' . $from . '&to=' . $to;
+        $url = 'https://api.everhour.com/resource-planner/assignments?from=' . $from->format('Y-m-d') . '&to=' . $to->format('Y-m-d');
         $request = Http::withHeaders([
             'X-Api-Key' => config('services.everhour.api_key'),
         ]);
@@ -95,6 +117,13 @@ class EverhourTrackingApi implements TrackingService
         ];
     }
 
+    /**
+     * Set tracking user id for given user
+     *
+     * @param User $user
+     * @param int $trackingUserId
+     * @return void
+     */
     private function setTaskUserId(User $user, int $trackingUserId)
     {
         $user->tracking_user_id = $trackingUserId;

@@ -5,25 +5,47 @@ namespace App\Services\Tasks;
 use App\Contracts\TaskService;
 use App\Models\Task;
 use App\Models\User;
+use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Http;
 
 class AsanaTaskApi implements TaskService
 {
+    /**
+     * @var User
+     */
     private User $user;
 
+    /**
+     * Sets user property
+     *
+     * @param User $user
+     */
     public function __construct(User $user)
     {
         $this->user = $user;
     }
 
-
-    public function getAssignedTasksForUser(string $from = '', string $to = ''): Collection
+    /**
+     * Get tasks by user
+     *
+     * @param DateTime $from
+     * @param DateTime $to
+     * @return Collection Task Collection
+     */
+    public function getAssignedTasksForUser(DateTime $from, DateTime $to): Collection
     {
         return Task::where('assigned_user_id', $this->user->task_user_id)->get();
     }
 
-    public function importTasksForUser(string $from = '', string $to = ''): int
+    /**
+     * Get asana tasks for specified user and upsert them
+     *
+     * @param DateTime $from
+     * @param DateTime $to
+     * @return int Task amount
+     */
+    public function importTasksForUser(DateTime $from, DateTime $to): int
     {
         $workspaces = $this->getWorkspacesForUser();
 
@@ -85,24 +107,43 @@ class AsanaTaskApi implements TaskService
         );
     }
 
+    /**
+     * Get workspaces for user
+     *
+     * @return array|mixed workspace data or asana error data
+     */
     public function getWorkspacesForUser()
     {
         return $this->get('/workspaces');
     }
 
+    /**
+     * Returns asana tasks
+     *
+     * @param string $userTaskListId user task list id
+     * @return array|mixed workspace data or asana error data
+     */
     private function getTasksByUserTaskList(string $userTaskListId)
     {
         return $this->get('/user_task_lists/' . $userTaskListId . '/tasks?completed_since=now&opt_fields=' . config('services.asana.optfields'));
     }
 
+    /**
+     * Return user task lists
+     *
+     * @param string $workspaceId workspace id
+     * @return array|mixed workspace data or asana error data
+     */
     private function getUserTaskListsByWorkspace(string $workspaceId)
     {
         return $this->get('/users/' . $this->user->task_user_id . '/user_task_list?workspace=' . $workspaceId);
     }
 
     /**
-     * @param string $url
-     * @return array|mixed
+     * Sends a http request, refreshes token if invalid and sends http request again
+     *
+     * @param string $url relative url to asana api
+     * @return array|mixed workspace data or asana error data
      */
     private function get(string $url)
     {
@@ -120,7 +161,7 @@ class AsanaTaskApi implements TaskService
     /**
      * Refreshes the token by using the refresh_token from the user
      *
-     * @return string
+     * @return string token
      */
     private function refreshToken(): string
     {
