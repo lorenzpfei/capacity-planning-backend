@@ -6,11 +6,19 @@ use App\Contracts\TrackingService;
 use App\Models\Task;
 use App\Models\Timeoff;
 use App\Models\User;
+use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Http;
 
 class EverhourTrackingApi implements TrackingService
 {
+    /**
+     * Updates tasks in database with everhour tracking data by given tasks collection
+     *
+     * @param Collection $tasks Collection of Task Entity
+     * @param string $prefix Everhour Task Prefix (e.g. ev:)
+     * @return void
+     */
     public function importTrackingDataForTasks(Collection $tasks, string $prefix = 'ev:')
     {
         $firstElement = true;
@@ -39,6 +47,13 @@ class EverhourTrackingApi implements TrackingService
         }
     }
 
+    /**
+     * Gets everhour tracking data
+     *
+     * @param Task $task Single Task
+     * @param string $prefix Everhour Task Prefix (e.g. ev:)
+     * @return array|mixed Everhour data or everhour error data
+     */
     public function getEverhourDataForTask(Task $task, string $prefix = 'ev:')
     {
         $url = 'https://api.everhour.com/tasks/' . $prefix . $task->id;
@@ -51,13 +66,13 @@ class EverhourTrackingApi implements TrackingService
     /**
      * Get aggregated timeoffs for users and write them into db
      *
-     * @param string $from
-     * @param string $to
-     * @return array
+     * @param DateTime $from
+     * @param DateTime $to
+     * @return array amount of upserts and users
      */
-    public function importTimeoffs(string $from = '', string $to = ''): array
+    public function importTimeoffs(DateTime $from, DateTime $to): array
     {
-        $url = 'https://api.everhour.com/resource-planner/assignments?from=' . $from . '&to=' . $to;
+        $url = 'https://api.everhour.com/resource-planner/assignments?from=' . $from->format('Y-m-d') . '&to=' . $to->format('Y-m-d');
         $request = Http::withHeaders([
             'X-Api-Key' => config('services.everhour.api_key'),
         ]);
@@ -102,6 +117,13 @@ class EverhourTrackingApi implements TrackingService
         ];
     }
 
+    /**
+     * Set tracking user id for given user
+     *
+     * @param User $user
+     * @param int $trackingUserId
+     * @return void
+     */
     private function setTaskUserId(User $user, int $trackingUserId)
     {
         $user->tracking_user_id = $trackingUserId;
