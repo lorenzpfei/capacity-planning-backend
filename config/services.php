@@ -31,6 +31,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'provider' => [
+        'task' => env('TASK_PROVIDER'),
+        'tracking' => env('TRACKING_PROVIDER')
+    ],
+
     'asana' => [
         'client_id' => env('ASANA_CLIENT_ID'),
         'client_secret' => env('ASANA_CLIENT_SECRET'),

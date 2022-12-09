@@ -36,9 +36,14 @@ class ImportTasks extends Command
             return Command::INVALID;
         }
 
-        $asanaTaskApi = new AsanaTaskApi($user);
-        $amount = $asanaTaskApi->importTasksForUser();
-        $this->info(sprintf('Successfully imported %d tasks', $amount));
+        $asanaTaskApi = new AsanaTaskApi();
+        try {
+            $amount = $asanaTaskApi->importTasksForUser($user);
+            $this->info(sprintf('Successfully imported %d tasks', $amount));
+        } catch (\Exception $e) {
+            $this->error($e->getMessage());
+            return Command::INVALID;
+        }
         return Command::SUCCESS;
     }
 }

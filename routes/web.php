@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\OAuthController;
+use App\Providers\TaskServiceProvider;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,7 +19,7 @@ Route::get('/', static function () {
     return view('welcome');
 });
 
-//todo: Remove debug
+Route::get('/test', [\App\Http\Controllers\WorkloadController::class, 'test']);
 
 Route::get('oauth/{provider}', [OAuthController::class, 'redirectToProvider']);
 Route::get('oauth/{provider}/callback', [OAuthController::class, 'handleProviderCallback']);
