@@ -23,7 +23,7 @@ return new class extends Migration
             $table->date('end');
             $table->string('type');
             $table->string('time')->nullable();
-            $table->string('time_off_period')->nullable();
+            $table->decimal('time_off_period')->nullable();
             $table->timestamps();
         });
     }

@@ -81,6 +81,21 @@ class EverhourTrackingApi implements TrackingService
         foreach ($request->get($url)->json() as $timeoff) {
             $time = $timeoff['time'] ?? null;
             $timeOffPeriod = $timeoff['timeOffPeriod'] ?? null;
+            switch ($timeOffPeriod)
+            {
+                case 'full-day':
+                    $timeOffPeriod = 1.0;
+                    break;
+                case 'half-and-quarter-of-day':
+                    $timeOffPeriod = 0.75;
+                    break;
+                case 'half-day':
+                    $timeOffPeriod = 0.5;
+                    break;
+                case 'quarter-of-day':
+                    $timeOffPeriod = 0.25;
+                    break;
+            }
 
             $dbData = [
                 'reason' => $timeoff['timeOffType']['name'],
@@ -104,7 +119,9 @@ class EverhourTrackingApi implements TrackingService
                     $aggregatedTimeoff[$aggegatedKey]['user_id'] = $user->id;
                     $aggregatedTimeoff[$aggegatedKey]['id'] = $user->id . '_' . $singleTimeoff['start'];
                 }
-
+                Timeoff::where('start', '>=', $from->format('Y-m-d'))
+                ->where('end', '<=', $to->format('Y-m-d'))
+                ->delete();
                 $upsertAmount = Timeoff::upsert($aggregatedTimeoff,
                     ['id'],
                     ['id', 'user_id', 'reason', 'paid', 'start', 'end', 'type', 'time', 'time_off_period']
