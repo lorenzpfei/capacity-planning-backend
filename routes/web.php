@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\OAuthController;
+use App\Http\Controllers\WorkloadController;
 use App\Providers\TaskServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +20,10 @@ Route::get('/', static function () {
     return view('welcome');
 });
 
-Route::get('/test', [\App\Http\Controllers\WorkloadController::class, 'test']);
+Route::controller(WorkloadController::class)->group(function () {
+    Route::get('/workload/{departmentId}/{from?}/{to?}', 'getWorkloadForDepartment');
+    //Route::post('/workload', 'store');
+});
 
 Route::get('oauth/{provider}', [OAuthController::class, 'redirectToProvider']);
 Route::get('oauth/{provider}/callback', [OAuthController::class, 'handleProviderCallback']);

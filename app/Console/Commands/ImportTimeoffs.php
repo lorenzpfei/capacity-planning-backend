@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Tracking\EverhourTrackingApi;
 use Illuminate\Console\Command;
 
 class ImportTimeoffs extends Command
@@ -28,8 +29,8 @@ class ImportTimeoffs extends Command
     public function handle()
     {
         $from = $this->argument('from') ?? sprintf('%d-01-01', date("Y"));
-        $to = $this->argument('to') ?? sprintf('%d-31-12', date("Y"));
-        $everhourTrackingApi = new \App\Services\Tracking\EverhourTrackingApi();
+        $to = $this->argument('to') ?? sprintf('%d-12-31', date("Y"));
+        $everhourTrackingApi = new EverhourTrackingApi();
         $returnData = $everhourTrackingApi->importTimeoffs(date_create($from), date_create($to));
         $this->info(sprintf('Successfully imported %d timeoffs for %d users', $returnData['upserts'], $returnData['users']));
         return Command::SUCCESS;

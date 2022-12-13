@@ -3,20 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\TaskService;
-use App\Models\User;
+use App\Contracts\TrackingService;
+use App\Services\Feature\WorkloadService;
+use DateTime;
 
 class WorkloadController extends Controller
 {
-    private TaskService $taskService;
+    private WorkloadService $workloadService;
 
-    public function __construct(TaskService $taskService)
+    public function __construct(TaskService $taskService, TrackingService $trackingService)
     {
-        $this->taskService = $taskService;
+        $this->workloadService = new WorkloadService($taskService, $trackingService);
     }
 
-    public function test()
+    /**
+     * @throws \Exception
+     */
+    public function getWorkloadForDepartment(int $departmentId, string $from = '', string $to = '')
     {
-        $tasks = $this->taskService->getAssignedTasksForUser(User::find(1)); //todo: move to service
-        dd($tasks); //todo: Debug entfernen
+        if($from === '')
+        {
+            $from = date('d.m.Y');
+        }
+        if($to === '')
+        {
+            $date = date('d.m.Y');
+            $date = strtotime("+35 day", strtotime($date));
+            $to = sprintf('%d-%d-%d', date("Y", $date), date("m", $date), date("d", $date));
+        }
+        $this->workloadService->getWorkloadForDepartment($departmentId, new DateTime($from), new DateTime($to));
     }
 }
