@@ -19,8 +19,8 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users');
             $table->string('reason');
             $table->boolean('paid')->default(0);
-            $table->date('start');
-            $table->date('end');
+            $table->date('start'); //todo: index
+            $table->date('end'); //todo: index
             $table->string('type');
             $table->string('time')->nullable();
             $table->decimal('time_off_period')->nullable();

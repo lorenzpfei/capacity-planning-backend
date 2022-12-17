@@ -53,7 +53,7 @@ class WorkloadService
             $date = date_timestamp_set(new DateTime(), $date);
             $activeContracts = new Collection();
 
-            if($dayInWeek === 6 || $dayInWeek === 0) {
+            if ($dayInWeek === 6 || $dayInWeek === 0) {
                 $i++;
                 continue;
             }
@@ -87,7 +87,7 @@ class WorkloadService
         $day = new \stdClass();
         $day->hoursContract = 0;
         $day->hoursTimeoff = 0;
-        $day->hoursTask = 0; //todo: implement
+        $day->hoursTask = 0;
 
         /** @var Contract $contract */
         foreach ($activeContracts as $contract) {
@@ -99,25 +99,111 @@ class WorkloadService
 
         /** @var Timeoff $timeoff */
         foreach ($timeoffsInPeriod as $timeoff) { //todo: own function and test only hourly timeoffs
-            $start = new DateTime($timeoff->start);
-            $end = new DateTime($timeoff->end);
-            $amountOfDays = ((int)$start->diff($end)->format('%a')) + 1;
-            if ($timeoff->time !== null) {
-                //timeoff in hours
-                $time = $timeoff->time / 60 / 60;
-                if($timeoff->start !== $timeoff->end)
-                {
-                    $time = $timeoff->time / 60 / 60 / $amountOfDays;
+            $day->hoursTimeoff += $this->getTimeoff($timeoff, $activeContracts);
+        }
+
+        $tasks = $this->tasks->whereNull('from');
+        $tasks = $tasks->merge($this->tasks->whereNotNull('from')->where('from', '>=', $date->format('Y-m-d')));
+
+
+        foreach ($tasks as $task) {
+            $leftTaskTrackingTime = $task->tracking_estimate - $task->tracking_total;
+            if ($leftTaskTrackingTime <= 0) {
+                continue;
+            }
+            $timestampForDate = strtotime($date->format('Y-m-d'));
+            if (strtotime($task->start) > $timestampForDate) //begin of working time for task in future
+            {
+                continue;
+            }
+
+            if($task->id === 1203472609060347)
+            {
+               // dump('total tracked '.$task->tracking_total / 3600); //todo: Debug entfernen
+            }
+
+            $weekdaysToWorkOn = $this->getWeekdayDifference(new DateTime(date('Y-m-d', $timestampForDate)), new DateTime(date('Y-m-d', strtotime($task->due))));
+
+            //Check timeoffs
+            $timeoffsInPeriod = Timeoff::whereBetween('start', [new DateTime(date('Y-m-d', $timestampForDate)), new DateTime(date('Y-m-d', strtotime($task->due)))])
+                ->orWhereBetween('end', [new DateTime(date('Y-m-d', $timestampForDate)), new DateTime(date('Y-m-d', strtotime($task->due)))])->get();
+
+            //loop through and remove days from weekdays
+
+            foreach ($timeoffsInPeriod as $timeoff) {
+                if ($timeoff->time !== null) {
+                    $weekdays = $this->getWeekdayDifference(new DateTime(date('Y-m-d', strtotime($timeoff->start))), new DateTime(date('Y-m-d', strtotime($timeoff->end))));
+                    $dailyTimeoff = ((int)$timeoff->time) / $weekdays / 3600;
+                    dd($dailyTimeoff); //todo: Debug entfernen
+                    $weekdaysToWorkOn -= $dailyTimeoff;
+                } else {
+                    $dailyTimeoff = ((float)$timeoff->time_off_period);
+                    $weekdaysToWorkOn -= $dailyTimeoff;
                 }
-                $day->hoursTimeoff += $time;
-            } else {
-                //timeoff in days
-                $belongingContractHours = $activeContracts->firstWhere('user_id', $timeoff->user_id)->hours_per_week / 5;
-                $day->hoursTimeoff += $belongingContractHours * $timeoff->time_off_period;
+            }
+
+            //use workdays to get the left time divided by those
+            $leftWorktimeForDate = $day->hoursContract - $day->hoursTimeoff - $day->hoursTask;
+            $taskHoursForDay = 0;
+            if($leftWorktimeForDate > 0 && $weekdaysToWorkOn > 0)
+            {
+                $taskHoursForDay = $leftTaskTrackingTime / $weekdaysToWorkOn / 3600;
+            }
+            //if daily task worktime is more than worktime left, just use the remaining worktime as task worktime
+            if($leftWorktimeForDate < $taskHoursForDay)
+            {
+                $taskHoursForDay = $leftWorktimeForDate;
+            }
+            $day->hoursTask += $taskHoursForDay;
+
+            //decrease today`s left worktime locally to ensure next days do not use it again
+            $this->tasks->firstWhere('id', $task->id)->tracking_total += $taskHoursForDay;
+            if($task->id === 1203472609060347)
+            {
+               // dump('taskTimeToday '.$taskHoursForDay/3600); //todo: Debug entfernen
+                //dump('$weekdaysToWorkOn '.$weekdaysToWorkOn); //todo: Debug entfernen
+                //dump('$leftTaskTrackingTime '.$leftTaskTrackingTime/3600); //todo: Debug entfernen
+
+                echo '<br><br><br>';
             }
         }
 
         return $day;
+    }
+
+    // This function takes a date and returns the remaining number of days by that date, with weekends removed
+    private function getWeekdayDifference(\DateTime $startDate, \DateTime $endDate)
+    {
+        $days = 0;
+        while ($startDate->getTimestamp() <= $endDate->getTimestamp()) {
+            $days += $startDate->format('N') < 6 ? 1 : 0;
+            $startDate = $startDate->setTimestamp(strtotime('+1 day', $startDate->getTimestamp())); //set to next day
+        }
+
+        return $days;
+    }
+
+
+    /**
+     * @throws \Exception
+     */
+    private function getTimeoff(Timeoff $timeoff, Collection $activeContracts)
+    {
+        $start = new DateTime($timeoff->start);
+        $end = new DateTime($timeoff->end);
+        $amountOfDays = ((int)$start->diff($end)->format('%a')) + 1;
+        if ($timeoff->time !== null) {
+            //timeoff in hours
+            $time = $timeoff->time / 60 / 60;
+            if ($timeoff->start !== $timeoff->end) {
+                $time = $timeoff->time / 60 / 60 / $amountOfDays;
+            }
+            return $time;
+        }
+
+        //timeoff in days
+        $belongingContractHours = $activeContracts->firstWhere('user_id', $timeoff->user_id)->hours_per_week / 5;
+        return $belongingContractHours * $timeoff->time_off_period;
     }
 
     public function getActiveContactForUser(User $user, DateTime $date) //todo: move into another service
