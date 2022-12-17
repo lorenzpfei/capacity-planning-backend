@@ -132,9 +132,7 @@ class WorkloadService
 
             foreach ($timeoffsInPeriod as $timeoff) {
                 if ($timeoff->time !== null) {
-                    $weekdays = $this->getWeekdayDifference(new DateTime(date('Y-m-d', strtotime($timeoff->start))), new DateTime(date('Y-m-d', strtotime($timeoff->end))));
-                    $dailyTimeoff = ((int)$timeoff->time) / $weekdays / 3600;
-                    dd($dailyTimeoff); //todo: Debug entfernen
+                    $dailyTimeoff = ((int)$timeoff->time) / 3600 / $day->hoursContract;
                     $weekdaysToWorkOn -= $dailyTimeoff;
                 } else {
                     $dailyTimeoff = ((float)$timeoff->time_off_period);
@@ -148,6 +146,11 @@ class WorkloadService
             if($leftWorktimeForDate > 0 && $weekdaysToWorkOn > 0)
             {
                 $taskHoursForDay = $leftTaskTrackingTime / $weekdaysToWorkOn / 3600;
+                if($day->hoursTimeoff > 0)
+                {
+                    //multiple task time with worktime factor for today to split the task time correctly
+                    $taskHoursForDay *= 1 - $day->hoursTimeoff / $day->hoursContract;
+                }
             }
             //if daily task worktime is more than worktime left, just use the remaining worktime as task worktime
             if($leftWorktimeForDate < $taskHoursForDay)
@@ -157,12 +160,13 @@ class WorkloadService
             $day->hoursTask += $taskHoursForDay;
 
             //decrease today`s left worktime locally to ensure next days do not use it again
-            $this->tasks->firstWhere('id', $task->id)->tracking_total += $taskHoursForDay;
-            if($task->id === 1203472609060347)
+            $this->tasks->firstWhere('id', $task->id)->tracking_total += $taskHoursForDay * 3600;
+            if($task->id === 1203506750204448)
             {
-               // dump('taskTimeToday '.$taskHoursForDay/3600); //todo: Debug entfernen
-                //dump('$weekdaysToWorkOn '.$weekdaysToWorkOn); //todo: Debug entfernen
-                //dump('$leftTaskTrackingTime '.$leftTaskTrackingTime/3600); //todo: Debug entfernen
+                dump($task->name.'   -   '.$date->format('Y-m-d')); //todo: Debug entfernen
+                dump('taskTimeToday '.$taskHoursForDay); //todo: Debug entfernen
+                dump('$weekdaysToWorkOn '.$weekdaysToWorkOn); //todo: Debug entfernen
+                dump('$leftTaskTrackingTime '.$leftTaskTrackingTime/3600); //todo: Debug entfernen
 
                 echo '<br><br><br>';
             }
