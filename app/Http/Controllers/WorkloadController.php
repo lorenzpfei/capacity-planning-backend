@@ -31,6 +31,6 @@ class WorkloadController extends Controller
             $date = strtotime("+35 day", strtotime($date));
             $to = sprintf('%d-%d-%d', date("Y", $date), date("m", $date), date("d", $date));
         }
-        $this->workloadService->getWorkloadForDepartment($departmentId, new DateTime($from), new DateTime($to));
+        return $this->workloadService->getWorkloadForDepartment($departmentId, new DateTime($from), new DateTime($to));
     }
 }
