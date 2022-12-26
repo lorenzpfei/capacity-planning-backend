@@ -8,7 +8,6 @@ use App\Models\Contract;
 use App\Models\Department;
 use App\Models\Task;
 use App\Models\Timeoff;
-use App\Models\User;
 use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -53,6 +52,8 @@ class WorkloadService
 
         $i = 0;
         $days = [];
+        $trackedHoursInWeek = 0;
+        $contractHoursInWeek = 0;
         while ($i < $amountOfDays) {
             $date = strtotime("+" . $i . " day", strtotime($today->format('Y-m-d')));
             $dayInWeek = (int)date('w', $date);
@@ -61,6 +62,8 @@ class WorkloadService
 
             if ($dayInWeek === 6 || $dayInWeek === 0) {
                 $i++;
+                $trackedHoursInWeek = 0; //prepare for week
+                $contractHoursInWeek = 0;
                 continue;
             }
 
@@ -71,8 +74,10 @@ class WorkloadService
                 $activeContracts->push($activeContract);
             }
 
-            $day = $this->calculateDay($date, $activeContracts);
-            if(strtotime($from->format('Y-m-d')) <= strtotime($date->format('Y-m-d'))) {
+            $day = $this->calculateDay($date, $activeContracts, $trackedHoursInWeek, $contractHoursInWeek);
+            $trackedHoursInWeek += $day->hoursTask + $day->hoursTimeoff;
+            $contractHoursInWeek += $day->hoursContract;
+            if (strtotime($from->format('Y-m-d')) <= strtotime($date->format('Y-m-d'))) {
                 $days[$date->format('Y-m-d')] = $day;
             }
             $i++;
@@ -81,9 +86,14 @@ class WorkloadService
     }
 
     /**
+     * @param DateTime $date
+     * @param Collection $activeContracts
+     * @param int $trackedHoursInWeek
+     * @param int $contractHoursInWeek
+     * @return \stdClass
      * @throws \Exception
      */
-    public function calculateDay(DateTime $date, Collection $activeContracts)
+    public function calculateDay(DateTime $date, Collection $activeContracts, int $trackedHoursInWeek, int $contractHoursInWeek)
     {
         $day = new \stdClass();
         $day->hoursContract = 0;
@@ -95,11 +105,12 @@ class WorkloadService
             $day->hoursContract += $contract->hours_per_week / 5;
         }
 
+
         $timeoffsInPeriod = $this->timeoffs->where('start', '<=', $date->format('Y-m-d'))
             ->where('end', '>=', $date->format('Y-m-d'));
 
         /** @var Timeoff $timeoff */
-        foreach ($timeoffsInPeriod as $timeoff) { //todo: own function and test only hourly timeoffs
+        foreach ($timeoffsInPeriod as $timeoff) { //todo: own function
             $day->hoursTimeoff += $this->getTimeoff($timeoff, $activeContracts);
         }
 
@@ -108,6 +119,15 @@ class WorkloadService
 
         foreach ($tasks as $task) {
             $taskHoursForDay = $this->getTaskHours($task, $date, $day);
+
+            //if task is too much for daily worktime, just estimate the remaining worktime for a time to work on this task for today
+            $weeklyTaskTime = $trackedHoursInWeek + $day->hoursTask + $taskHoursForDay;
+            $weeklyContractTime = $contractHoursInWeek + $day->hoursContract;
+
+            if ($weeklyTaskTime > $weeklyContractTime) {
+                $taskHoursForDay = $weeklyContractTime - $weeklyTaskTime;
+            }
+
             $day->hoursTask += $taskHoursForDay;
 
             //decrease today`s left worktime locally to ensure next days do not use it again
@@ -203,7 +223,7 @@ class WorkloadService
     public function getActiveContactForUser(int $userId, DateTime $date) //todo: move into another service
     {
         return Contract::
-            where('user_id', $userId)
+        where('user_id', $userId)
             ->where('from', '<=', date('Y-m-d'))
             ->where(function ($query) use ($date) {
                 $query->whereNull('to')
