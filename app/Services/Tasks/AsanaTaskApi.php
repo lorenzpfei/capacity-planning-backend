@@ -58,6 +58,7 @@ class AsanaTaskApi implements TaskService
         }
 
         $dbData = [];
+        //Format data for upsert
         foreach ($tasks as $task) {
             $dbTask = [];
             $dbTask['id'] = (int)$task['gid'];

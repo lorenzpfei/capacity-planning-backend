@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\TaskService;
-use App\Contracts\TrackingService;
+use App\Services\Feature\UserService;
 use App\Services\Feature\WorkloadService;
 use DateTime;
 
@@ -11,9 +10,9 @@ class WorkloadController extends Controller
 {
     private WorkloadService $workloadService;
 
-    public function __construct(TaskService $taskService, TrackingService $trackingService)
+    public function __construct(UserService $userService)
     {
-        $this->workloadService = new WorkloadService($taskService, $trackingService);
+        $this->workloadService = new WorkloadService($userService);
     }
 
     /**

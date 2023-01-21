@@ -77,6 +77,7 @@ class EverhourTrackingApi implements TrackingService
             'X-Api-Key' => config('services.everhour.api_key'),
         ]);
 
+        //Format data
         $aggregatedTimeoffs = [];
         foreach ($request->get($url)->json() as $timeoff) {
             $time = $timeoff['time'] ?? null;
@@ -97,6 +98,7 @@ class EverhourTrackingApi implements TrackingService
                     break;
             }
 
+            //Format array to be upserted
             $dbData = [
                 'reason' => $timeoff['timeOffType']['name'],
                 'paid' => $timeoff['timeOffType']['paid'],
@@ -109,7 +111,7 @@ class EverhourTrackingApi implements TrackingService
             $aggregatedTimeoffs[$timeoff['user']['id']][] = $dbData;
         }
 
-
+        //Set assigned users and upsert timeoffs
         $upsertAmount = 0;
         foreach ($aggregatedTimeoffs as $key => $aggregatedTimeoff) {
             $user = User::where('tracking_user_id', '=', $key)->first();
