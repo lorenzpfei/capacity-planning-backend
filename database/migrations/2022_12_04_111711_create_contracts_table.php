@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->timestamp('from');
             $table->timestamp('to')->nullable();
-            $table->tinyInteger('hours_per_week');
+            $table->decimal('hours_per_week');
             $table->timestamps();
         });
     }

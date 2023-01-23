@@ -12,7 +12,7 @@ class Timeoff extends Model
      *
      * @var string
      */
-    protected $keyType = 'string';
+    protected $keyType = 'string'; //todo: useless, remove that and use normal id -> prevents having multiple timeoffs on 1 day for 1 user
 
     /**
      * Indicates if the model's ID is auto-incrementing.

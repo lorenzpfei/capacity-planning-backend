@@ -77,11 +77,28 @@ class EverhourTrackingApi implements TrackingService
             'X-Api-Key' => config('services.everhour.api_key'),
         ]);
 
+        //Format data
         $aggregatedTimeoffs = [];
         foreach ($request->get($url)->json() as $timeoff) {
             $time = $timeoff['time'] ?? null;
             $timeOffPeriod = $timeoff['timeOffPeriod'] ?? null;
+            switch ($timeOffPeriod)
+            {
+                case 'full-day':
+                    $timeOffPeriod = 1.0;
+                    break;
+                case 'half-and-quarter-of-day':
+                    $timeOffPeriod = 0.75;
+                    break;
+                case 'half-day':
+                    $timeOffPeriod = 0.5;
+                    break;
+                case 'quarter-of-day':
+                    $timeOffPeriod = 0.25;
+                    break;
+            }
 
+            //Format array to be upserted
             $dbData = [
                 'reason' => $timeoff['timeOffType']['name'],
                 'paid' => $timeoff['timeOffType']['paid'],
@@ -94,7 +111,7 @@ class EverhourTrackingApi implements TrackingService
             $aggregatedTimeoffs[$timeoff['user']['id']][] = $dbData;
         }
 
-
+        //Set assigned users and upsert timeoffs
         $upsertAmount = 0;
         foreach ($aggregatedTimeoffs as $key => $aggregatedTimeoff) {
             $user = User::where('tracking_user_id', '=', $key)->first();
@@ -104,7 +121,9 @@ class EverhourTrackingApi implements TrackingService
                     $aggregatedTimeoff[$aggegatedKey]['user_id'] = $user->id;
                     $aggregatedTimeoff[$aggegatedKey]['id'] = $user->id . '_' . $singleTimeoff['start'];
                 }
-
+                Timeoff::where('start', '>=', $from->format('Y-m-d'))
+                ->where('end', '<=', $to->format('Y-m-d'))
+                ->delete();
                 $upsertAmount = Timeoff::upsert($aggregatedTimeoff,
                     ['id'],
                     ['id', 'user_id', 'reason', 'paid', 'start', 'end', 'type', 'time', 'time_off_period']

@@ -197,6 +197,9 @@ return [
 
         //Socialite
         \SocialiteProviders\Manager\ServiceProvider::class,
+
+        \App\Providers\TaskServiceProvider::class,
+        \App\Providers\TrackingServiceProvider::class
     ],
 
     /*

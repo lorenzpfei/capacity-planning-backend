@@ -11,9 +11,21 @@ interface TaskService
     /**
      * Get tasks by user
      *
-     * @param DateTime $from
-     * @param DateTime $to
+     * @param User $user
+     * @param DateTime|null $from
+     * @param DateTime|null $to
      * @return Collection Task Collection
      */
-    public function getAssignedTasksForUser(DateTime $from, DateTime $to): Collection;
+    public function getAssignedTasksForUser(User $user, DateTime $from = null, DateTime $to = null): Collection;
+
+
+    /**
+     * Get asana tasks for specified user and upsert them
+     *
+     * @param User $user User to import the tasks for
+     * @param DateTime|null $from
+     * @param DateTime|null $to
+     * @return int Task amount
+     */
+    public function importTasksForUser(User $user, DateTime $from = null, DateTime $to = null): int;
 }

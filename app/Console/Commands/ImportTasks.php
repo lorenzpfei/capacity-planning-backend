@@ -2,12 +2,19 @@
 
 namespace App\Console\Commands;
 
+use App\Contracts\TaskService;
 use App\Models\User;
-use App\Services\Tasks\AsanaTaskApi;
 use Illuminate\Console\Command;
 
 class ImportTasks extends Command
 {
+    private TaskService $taskService;
+    public function __construct(TaskService $taskService)
+    {
+        parent::__construct();
+        $this->taskService = $taskService;
+    }
+
     /**
      * The name and signature of the console command.
      *
@@ -36,9 +43,13 @@ class ImportTasks extends Command
             return Command::INVALID;
         }
 
-        $asanaTaskApi = new AsanaTaskApi($user);
-        $amount = $asanaTaskApi->importTasksForUser();
-        $this->info(sprintf('Successfully imported %d tasks', $amount));
+        try {
+            $amount = $this->taskService->importTasksForUser($user);
+            $this->info(sprintf('Successfully imported %d tasks', $amount));
+        } catch (\Exception $e) {
+            $this->error($e->getMessage());
+            return Command::FAILURE;
+        }
         return Command::SUCCESS;
     }
 }
