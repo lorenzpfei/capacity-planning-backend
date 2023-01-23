@@ -48,7 +48,7 @@ class ImportTasks extends Command
             $this->info(sprintf('Successfully imported %d tasks', $amount));
         } catch (\Exception $e) {
             $this->error($e->getMessage());
-            return Command::INVALID;
+            return Command::FAILURE;
         }
         return Command::SUCCESS;
     }
