@@ -45,6 +45,10 @@ class OAuthController extends Controller
             ]);
         }
 
+        $update = array_merge($update, [
+            'avatar' => $socialiteUser->getAvatar()["image_128x128"]
+        ]);
+
         User::where('email', $socialiteUser->getEmail())
             ->update($update);
 

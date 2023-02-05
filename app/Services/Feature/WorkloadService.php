@@ -51,7 +51,7 @@ class WorkloadService
             $this->contracts = [];
             $this->addWorkdataPerUser($user, $from);
             $user->workload = $this->getWorkloadForUser($amountOfDays, $today, $from);
-            $workdataPerAppartment[$user->id] = $user;
+            $workdataPerAppartment[] = $user;
         }
         return $workdataPerAppartment;
     }
@@ -97,7 +97,8 @@ class WorkloadService
             $trackedHoursInWeek += $day->hoursTask + $day->hoursTimeoff;
             $contractHoursInWeek += $day->hoursContract;
             if (strtotime($from->format('Y-m-d')) <= strtotime($date->format('Y-m-d'))) {
-                $days[$date->format('Y-m-d')] = $day;
+                $day->date = $date->format('Y-m-d');
+                $days[] = $day;
             }
             $i++;
         }
