@@ -27,21 +27,44 @@ class WorkloadService
     private array $contracts;
 
     /**
+     * Returns an array of users with the calculated workload for the given period
+     *
+     * @param int $departmentId
+     * @param DateTime $from
+     * @param DateTime $to
+     * @return array
      * @throws Exception
      */
     public function getWorkloadForDepartment(int $departmentId, DateTime $from, DateTime $to)
     {
         $users = Department::find($departmentId)?->users;
-        $this->tasks = new Collection();
-        $this->timeoffs = new Collection();
-        $this->contracts = [];
 
-        foreach ($users as $user) {
-            $this->addWorkdataPerUser($user, $from);
-        }
         $today = new DateTime();
         $amountOfDays = (int)$today->diff($to)->format('%a');
 
+        $workdataPerAppartment = [];
+        foreach ($users as $user) {
+            $this->tasks = new Collection();
+            $this->timeoffs = new Collection();
+            $this->contracts = [];
+            $this->addWorkdataPerUser($user, $from);
+            $user->workload = $this->getWorkloadForUser($amountOfDays, $today, $from);
+            $workdataPerAppartment[$user->id] = $user;
+        }
+        return $workdataPerAppartment;
+    }
+
+    /**
+     * Returns workload for user in the from the given date for an amount of days
+     *
+     * @param int $amountOfDays
+     * @param DateTime $today
+     * @param DateTime $from
+     * @return array
+     * @throws Exception
+     */
+    private function getWorkloadForUser(int $amountOfDays, DateTime $today, DateTime $from)
+    {
         $i = 0;
         $days = [];
         $trackedHoursInWeek = 0;
