@@ -15,7 +15,9 @@ use stdClass;
 class WorkloadService
 {
     private UserService $userService;
-    public function __construct(UserService $userService){
+
+    public function __construct(UserService $userService)
+    {
         $this->userService = $userService;
     }
 
@@ -40,7 +42,7 @@ class WorkloadService
         $users = Department::find($departmentId)?->users;
 
         $today = new DateTime();
-        $amountOfDays = (int)$today->diff($to)->format('%a');
+        $amountOfDays = (int)$today->diff($to)->format('%a') + 1; //include from and to
 
         $workdataPerAppartment = [];
         foreach ($users as $user) {
@@ -71,7 +73,7 @@ class WorkloadService
         $contractHoursInWeek = 0;
 
         //calculate each day
-        while ($i < $amountOfDays) {
+        while ($i <= $amountOfDays) {
             $date = strtotime("+" . $i . " day", strtotime($today->format('Y-m-d')));
             $dayInWeek = (int)date('w', $date);
             $date = date_timestamp_set(new DateTime(), $date);
