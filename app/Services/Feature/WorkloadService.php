@@ -51,6 +51,16 @@ class WorkloadService
             $this->contracts = [];
             $this->addWorkdataPerUser($user, $from);
             $user->workload = $this->getWorkloadForUser($amountOfDays, $today, $from);
+            $user->workloadSum = new stdClass();
+            $user->workloadSum->hoursTask = 0;
+            $user->workloadSum->hoursContract = 0;
+            $user->workloadSum->hoursTimeoff = 0;
+            foreach($this->getWorkloadForUser($amountOfDays, $today, $from) as $day)
+            {
+                $user->workloadSum->hoursTask += $day->hoursTask;
+                $user->workloadSum->hoursContract += $day->hoursContract;
+                $user->workloadSum->hoursTimeoff += $day->hoursTimeoff;
+            }
             $workdataPerAppartment[] = $user;
         }
         return $workdataPerAppartment;
