@@ -152,6 +152,7 @@ class WorkloadService
         $day->hoursContract = 0;
         $day->hoursTimeoff = 0;
         $day->hoursTask = 0;
+        $day->tasks = [];
 
         /** @var Contract $contract */
         foreach ($activeContracts as $contract) {
@@ -170,6 +171,7 @@ class WorkloadService
         $tasks = $this->tasks->whereNull('start')->whereNull('completed');
         $tasks = $tasks->merge($this->tasks->whereNotNull('start')->where('start', '>=', $date->format('Y-m-d')))->whereNull('completed');
 
+        /** @var Task $task */
         foreach ($tasks as $task) {
             $taskHoursForDay = $this->getTaskHours($task, $date, $day);
 
@@ -182,6 +184,11 @@ class WorkloadService
             }
 
             $day->hoursTask += $taskHoursForDay;
+
+            if($taskHoursForDay > 0)
+            {
+                $day->tasks[] = $task->id;
+            }
 
             //decrease today`s left worktime locally to ensure next days do not use it again
             $this->tasks->firstWhere('id', $task->id)->tracking_total += $taskHoursForDay * 3600;
