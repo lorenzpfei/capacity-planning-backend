@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('avatar')->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->unsignedBigInteger('task_user_id')->index()->nullable();
             $table->string('task_token')->nullable();
             $table->string('task_refresh_token')->nullable();

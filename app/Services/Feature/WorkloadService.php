@@ -55,7 +55,7 @@ class WorkloadService
             $user->workloadSum->hoursTask = 0;
             $user->workloadSum->hoursContract = 0;
             $user->workloadSum->hoursTimeoff = 0;
-            foreach($this->getWorkloadForUser($amountOfDays, $today, $from) as $day)
+            foreach($user->workload as $day)
             {
                 $user->workloadSum->hoursTask += $day->hoursTask;
                 $user->workloadSum->hoursContract += $day->hoursContract;
@@ -100,7 +100,10 @@ class WorkloadService
             foreach ($this->contracts as $collection) {
                 //use first Contract of user which to date is null else use latest to date in timerange
                 $activeContract = $this->userService->getActiveContactForUser($collection->first()->user_id, $date);
-                $activeContracts->push($activeContract);
+                if($activeContract !== null)
+                {
+                    $activeContracts->push($activeContract);
+                }
             }
 
             $day = $this->calculateDay($date, $activeContracts, $trackedHoursInWeek, $contractHoursInWeek);
@@ -187,7 +190,10 @@ class WorkloadService
 
             if($taskHoursForDay > 0)
             {
-                $day->tasks[] = $task->id;
+                $formatedTask = new stdClass();
+                $formatedTask->name = $task->name;
+                $formatedTask->link = $task->link;
+                $day->tasks[] = $formatedTask;
             }
 
             //decrease today`s left worktime locally to ensure next days do not use it again

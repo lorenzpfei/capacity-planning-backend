@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Http\Request;
 
 class OAuthController extends Controller
 {
-    /** @var string[]  */
+    /** @var string[] */
     private array $taskProviders = ['asana'];
 
-    /** @var string[]  */
+    /** @var string[] */
     private array $trackingProviders = ['everhour'];
 
     /**
@@ -23,21 +25,22 @@ class OAuthController extends Controller
         return Socialite::driver($provider)->redirect();
     }
 
-    public function handleProviderCallback(string $provider): RedirectResponse
+    public function handleProviderCallback(string $provider, Request $request): RedirectResponse
     {
-        $socialiteUser = Socialite::driver($provider)->user();
+        //todo: improve this
+
+        //does not work on twitter
+        $socialiteUser = Socialite::driver($provider)->stateless()->user();
 
         $update = [];
-        if(in_array($provider, $this->taskProviders, true))
-        {
+        if (in_array($provider, $this->taskProviders, true)) {
             $update = [
                 'task_token' => $socialiteUser->token,
                 'task_refresh_token' => $socialiteUser->refreshToken,
                 'task_user_id' => $socialiteUser->getId()
             ];
         }
-        if(in_array($provider, $this->trackingProviders, true))
-        {
+        if (in_array($provider, $this->trackingProviders, true)) {
             $update = array_merge($update, [
                 'tracking_token' => $socialiteUser->token,
                 'tracking_refresh_token' => $socialiteUser->refreshToken,
@@ -49,8 +52,13 @@ class OAuthController extends Controller
             'avatar' => $socialiteUser->getAvatar()["image_128x128"]
         ]);
 
-        User::where('email', $socialiteUser->getEmail())
-            ->update($update);
+        $user = User::updateOrCreate([
+            'email' => $socialiteUser->getEmail(),
+        ], $update);
+
+        Auth::login($user);
+
+        $request->session()->regenerate();
 
         //Redirect
         return redirect('');

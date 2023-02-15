@@ -99,6 +99,8 @@ class AsanaTaskApi implements TaskService
                 $dbTask['custom_fields'] = json_encode($dbTask['custom_fields']);
             }
 
+            $dbTask['link'] = $task['permalink_url'];
+
             $dbData[] = $dbTask;
         }
 
