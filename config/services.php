@@ -33,7 +33,8 @@ return [
 
     'provider' => [
         'task' => env('TASK_PROVIDER'),
-        'tracking' => env('TRACKING_PROVIDER')
+        'tracking' => env('TRACKING_PROVIDER'),
+        'login' => env('LOGIN_PROVIDER')
     ],
 
     'asana' => [
@@ -43,7 +44,18 @@ return [
         'optfields' => env('ASANA_OPTFIELDS')
     ],
 
+    'azure' => [
+        'client_id' => env('AZURE_CLIENT_ID'),
+        'client_secret' => env('AZURE_CLIENT_SECRET'),
+        'redirect' => env('AZURE_REDIRECT_URI'),
+        'tenant' => env('AZURE_TENANT_ID')
+    ],
+
     'everhour' => [
         'api_key' => env('EVERHOUR_API_KEY'),
+    ],
+
+    'frontend' => [
+        'url' => env('FRONTEND_URL'),
     ],
 ];

@@ -10,12 +10,6 @@ use Illuminate\Http\Request;
 
 class OAuthController extends Controller
 {
-    /** @var string[] */
-    private array $taskProviders = ['asana'];
-
-    /** @var string[] */
-    private array $trackingProviders = ['everhour'];
-
     /**
      * @param string $provider
      * @return RedirectResponse
@@ -28,19 +22,21 @@ class OAuthController extends Controller
     public function handleProviderCallback(string $provider, Request $request): RedirectResponse
     {
         //todo: improve this
-
         //does not work on twitter
         $socialiteUser = Socialite::driver($provider)->stateless()->user();
 
+        $taskProvider = config('services.provider.task');
+        $trackingProvider = config('services.provider.tracking');
+        $loginProvider = config('services.provider.login');
         $update = [];
-        if (in_array($provider, $this->taskProviders, true)) {
+        if ($provider === $taskProvider) {
             $update = [
                 'task_token' => $socialiteUser->token,
                 'task_refresh_token' => $socialiteUser->refreshToken,
                 'task_user_id' => $socialiteUser->getId()
             ];
         }
-        if (in_array($provider, $this->trackingProviders, true)) {
+        if ($provider === $trackingProvider) {
             $update = array_merge($update, [
                 'tracking_token' => $socialiteUser->token,
                 'tracking_refresh_token' => $socialiteUser->refreshToken,
@@ -48,19 +44,28 @@ class OAuthController extends Controller
             ]);
         }
 
-        $update = array_merge($update, [
-            'avatar' => $socialiteUser->getAvatar()["image_128x128"]
-        ]);
+        if ($provider === $loginProvider) {
+            $update = array_merge($update, [
+                'login_token' => $socialiteUser->token
+            ]);
+        }
+
+        if (isset($socialiteUser->getAvatar()["image_128x128"]) && $socialiteUser->getAvatar()["image_128x128"] !== null) {
+            $update = array_merge($update, [
+                'avatar' => $socialiteUser->getAvatar()["image_128x128"]
+            ]);
+        }
 
         $user = User::updateOrCreate([
             'email' => $socialiteUser->getEmail(),
         ], $update);
 
-        Auth::login($user);
-
-        $request->session()->regenerate();
+        if ($provider === $loginProvider) {
+            Auth::login($user);
+            $request->session()->regenerate();
+        }
 
         //Redirect
-        return redirect('');
+        return redirect(config('services.frontend.url'));
     }
 }

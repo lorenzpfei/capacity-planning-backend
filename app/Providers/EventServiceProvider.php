@@ -5,8 +5,8 @@ namespace App\Providers;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 use SocialiteProviders\Asana\AsanaExtendSocialite;
+use SocialiteProviders\Azure\AzureExtendSocialite;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class EventServiceProvider extends ServiceProvider
@@ -22,6 +22,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         SocialiteWasCalled::class => [
             AsanaExtendSocialite::class.'@handle',
+            AzureExtendSocialite::class.'@handle'
         ],
     ];
 

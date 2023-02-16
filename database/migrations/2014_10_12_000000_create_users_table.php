@@ -23,7 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('task_user_id')->index()->nullable();
             $table->string('task_token')->nullable();
             $table->string('task_refresh_token')->nullable();
-            $table->unsignedBigInteger('tracking_user_id')->nullable();;
+            $table->unsignedBigInteger('tracking_user_id')->nullable();
             $table->string('tracking_token')->nullable();
             $table->string('tracking_refresh_token')->nullable();
             $table->rememberToken();
