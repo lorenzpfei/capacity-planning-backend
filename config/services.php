@@ -34,7 +34,8 @@ return [
     'provider' => [
         'task' => env('TASK_PROVIDER'),
         'tracking' => env('TRACKING_PROVIDER'),
-        'login' => env('LOGIN_PROVIDER')
+        'login' => env('LOGIN_PROVIDER'),
+        'connectable' => env('CONNECTABLE_PROVIDERS')
     ],
 
     'asana' => [
