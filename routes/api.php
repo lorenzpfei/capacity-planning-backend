@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkloadController;
+use App\Models\Department;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,3 +35,6 @@ Route::middleware('auth:sanctum')->controller(WorkloadController::class)->group(
     Route::get('/workload/{departmentId}/{from?}/{to?}', 'getWorkloadForDepartment');
 });
 
+Route::middleware('auth:sanctum')->get('/departments', function () {
+    return Department::all();
+});
