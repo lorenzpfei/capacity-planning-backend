@@ -21,20 +21,20 @@ class EverhourTrackingApi implements TrackingService
      */
     public function importTrackingDataForTasks(Collection $tasks, string $prefix = 'ev:')
     {
-        $firstElement = true;
+        $updatedUsers = [];
 
         /** @var Task $task */
         foreach ($tasks as $task) {
             $everhourTask = $this->getEverhourDataForTask($task, $prefix);
 
             //set correct everhour user id
-            if ($firstElement) {
+            if (!in_array($task->assigned_user_id, $updatedUsers, true)) {
                 $this->setTaskUserId(User::find($task->assigned_user_id), $everhourTask['assignees'][0]['userId']);
-                $firstElement = false;
+                $updatedUsers[] = $task->assigned_user_id;
             }
 
             $task->tracking_total = $everhourTask['time']['total'] ?? null;
-            if(isset($everhourTask['time']['users'])) {
+            if (isset($everhourTask['time']['users'])) {
                 $users = $everhourTask['time']['users'];
                 $task->tracking_users = json_encode($users);
 
@@ -82,15 +82,14 @@ class EverhourTrackingApi implements TrackingService
         foreach ($request->get($url)->json() as $timeoff) {
             $time = $timeoff['time'] ?? null;
             $timeOffPeriod = $timeoff['timeOffPeriod'] ?? null;
-            switch ($timeOffPeriod)
-            {
+            switch ($timeOffPeriod) {
                 case 'full-day':
                     $timeOffPeriod = 1.0;
                     break;
                 case 'half-and-quarter-of-day':
                     $timeOffPeriod = 0.75;
                     break;
-                case 'half-day':
+                case 'half-of-day':
                     $timeOffPeriod = 0.5;
                     break;
                 case 'quarter-of-day':
@@ -116,14 +115,15 @@ class EverhourTrackingApi implements TrackingService
         foreach ($aggregatedTimeoffs as $key => $aggregatedTimeoff) {
             $user = User::where('tracking_user_id', '=', $key)->first();
             if ($user !== null) {
-                foreach($aggregatedTimeoff as $aggegatedKey => $singleTimeoff)
-                {
+                foreach ($aggregatedTimeoff as $aggegatedKey => $singleTimeoff) {
                     $aggregatedTimeoff[$aggegatedKey]['user_id'] = $user->id;
                     $aggregatedTimeoff[$aggegatedKey]['id'] = $user->id . '_' . $singleTimeoff['start'];
                 }
                 Timeoff::where('start', '>=', $from->format('Y-m-d'))
-                ->where('end', '<=', $to->format('Y-m-d'))
-                ->delete();
+                    ->where('end', '<=', $to->format('Y-m-d'))
+                    ->where('user_id', '=', $user->id)
+                    ->delete();
+
                 $upsertAmount = Timeoff::upsert($aggregatedTimeoff,
                     ['id'],
                     ['id', 'user_id', 'reason', 'paid', 'start', 'end', 'type', 'time', 'time_off_period']

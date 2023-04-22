@@ -23,42 +23,49 @@ class OAuthController extends Controller
     {
         //todo: improve this
         //does not work on twitter
-        $socialiteUser = Socialite::driver($provider)->stateless()->user();
+        try{
+            $socialiteUser = Socialite::driver($provider)->stateless()->user();
+        }catch(\Exception $e){
+            dd($e); //todo: Debug entfernen
+        }
 
         $taskProvider = config('services.provider.task');
         $trackingProvider = config('services.provider.tracking');
         $loginProvider = config('services.provider.login');
-        $update = [];
+        $user = User::firstWhere(['email' => $socialiteUser->getEmail()]);
+
+        if($user === null)
+        {
+            $user = User::newModelInstance();
+            $user->email = $socialiteUser->getEmail();
+        }
+
+
         if ($provider === $taskProvider) {
-            $update = [
-                'task_token' => $socialiteUser->token,
-                'task_refresh_token' => $socialiteUser->refreshToken,
-                'task_user_id' => $socialiteUser->getId()
-            ];
+            $user->task_token = $socialiteUser->token;
+            $user->task_refresh_token = $socialiteUser->refreshToken;
+            $user->task_user_id = $socialiteUser->getId();
         }
         if ($provider === $trackingProvider) {
-            $update = array_merge($update, [
-                'tracking_token' => $socialiteUser->token,
-                'tracking_refresh_token' => $socialiteUser->refreshToken,
-                'tracking_user_id' => $socialiteUser->getId()
-            ]);
+            $user->tracking_token = $socialiteUser->token;
+            $user->tracking_refresh_token = $socialiteUser->refreshToken;
+            $user->tracking_user_id = $socialiteUser->getId();
         }
 
         if ($provider === $loginProvider) {
-            $update = array_merge($update, [
-                'login_token' => $socialiteUser->token
-            ]);
+            //$user->login_token = $socialiteUser->token;
         }
 
         if (isset($socialiteUser->getAvatar()["image_128x128"]) && $socialiteUser->getAvatar()["image_128x128"] !== null) {
-            $update = array_merge($update, [
-                'avatar' => $socialiteUser->getAvatar()["image_128x128"]
-            ]);
+            $user->avatar = $socialiteUser->getAvatar()["image_128x128"];
         }
 
-        $user = User::updateOrCreate([
-            'email' => $socialiteUser->getEmail(),
-        ], $update);
+
+        if ($socialiteUser->getName() !== null) {
+            $user->name = $socialiteUser->getName();
+        }
+
+        $user->save();
 
         if ($provider === $loginProvider) {
             Auth::login($user);

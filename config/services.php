@@ -41,14 +41,14 @@ return [
     'asana' => [
         'client_id' => env('ASANA_CLIENT_ID'),
         'client_secret' => env('ASANA_CLIENT_SECRET'),
-        'redirect' => env('ASANA_REDIRECT_URI'),
+        'redirect' => env('APP_URL') . env('ASANA_REDIRECT_URI'),
         'optfields' => env('ASANA_OPTFIELDS')
     ],
 
     'azure' => [
         'client_id' => env('AZURE_CLIENT_ID'),
         'client_secret' => env('AZURE_CLIENT_SECRET'),
-        'redirect' => env('AZURE_REDIRECT_URI'),
+        'redirect' => env('APP_URL') . env('AZURE_REDIRECT_URI'),
         'tenant' => env('AZURE_TENANT_ID')
     ],
 

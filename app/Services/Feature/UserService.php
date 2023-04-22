@@ -14,7 +14,7 @@ class UserService
      * @param DateTime $date
      * @return Contract
      */
-    public function getActiveContactForUser(int $userId, DateTime $date)
+    public function getActiveContractForUser(int $userId, DateTime $date)
     {
         return Contract::
         where('user_id', $userId)

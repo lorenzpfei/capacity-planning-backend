@@ -67,7 +67,7 @@ class AsanaTaskApi implements TaskService
             $dbTask['created_at'] = date('Y-m-d H:i:s', strtotime($task['created_at']));
 
             $creator = $user;
-            if((string)$task['created_by']['gid'] !== (string)$user->task_user_id) {
+            if(isset($task['created_by']['gid']) && (string)$task['created_by']['gid'] !== (string)$user->task_user_id) {
                 $creator = User::firstWhere('task_user_id', $task['created_by']['gid']);
             }
             $dbTask['creator_user_id'] = $creator?->id;

@@ -99,7 +99,7 @@ class WorkloadService
             /** @var Collection $collection */
             foreach ($this->contracts as $collection) {
                 //use first Contract of user which to date is null else use latest to date in timerange
-                $activeContract = $this->userService->getActiveContactForUser($collection->first()->user_id, $date);
+                $activeContract = $this->userService->getActiveContractForUser($collection->first()->user_id, $date);
                 if($activeContract !== null)
                 {
                     $activeContracts->push($activeContract);

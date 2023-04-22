@@ -22,4 +22,6 @@ class Timeoff extends Model
     public $incrementing = false;
 
     use HasFactory;
+
+    protected $guarded = ['id'];
 }

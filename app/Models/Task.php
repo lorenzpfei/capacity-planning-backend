@@ -11,4 +11,6 @@ class Task extends Model
 
     //disable automatic timestamps
     public $timestamps = false;
+
+    protected $guarded = ['id'];
 }
