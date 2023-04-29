@@ -25,7 +25,7 @@ interface TaskService
      * @param User $user User to import the tasks for
      * @param DateTime|null $from
      * @param DateTime|null $to
-     * @return int Task amount
+     * @return array Task amount
      */
-    public function importTasksForUser(User $user, DateTime $from = null, DateTime $to = null): int;
+    public function importTasksForUser(User $user, DateTime $from = null, DateTime $to = null): array; //todo: specify array
 }

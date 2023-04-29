@@ -29,7 +29,9 @@ class EverhourTrackingApi implements TrackingService
 
             //set correct everhour user id
             if (!in_array($task->assigned_user_id, $updatedUsers, true)) {
-                $this->setTaskUserId(User::find($task->assigned_user_id), $everhourTask['assignees'][0]['userId']);
+                if(isset($everhourTask['assignees'])) {
+                    $this->setTrackingUserId(User::find($task->assigned_user_id), $everhourTask['assignees'][0]['userId']);
+                }
                 $updatedUsers[] = $task->assigned_user_id;
             }
 
@@ -143,7 +145,7 @@ class EverhourTrackingApi implements TrackingService
      * @param int $trackingUserId
      * @return void
      */
-    private function setTaskUserId(User $user, int $trackingUserId)
+    private function setTrackingUserId(User $user, int $trackingUserId)
     {
         $user->tracking_user_id = $trackingUserId;
         $user->save();

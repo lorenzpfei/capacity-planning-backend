@@ -31,17 +31,15 @@ class AsanaTaskApi implements TaskService
      * @param User $user User to import the tasks for
      * @param DateTime|null $from
      * @param DateTime|null $to
-     * @return int Task amount
+     * @return array Task amount
      * @throws Exception
      */
-    public function importTasksForUser(User $user, DateTime $from = null, DateTime $to = null): int
+    public function importTasksForUser(User $user, DateTime $from = null, DateTime $to = null): array
     {
-        if($from === null)
-        {
+        if ($from === null) {
             $from = new DateTime(sprintf('%d-01-01', date("Y")));
         }
-        if($to === null)
-        {
+        if ($to === null) {
             $to = new DateTime(sprintf('%d-12-31', date("Y")));
         }
         //todo: implement time range
@@ -58,6 +56,7 @@ class AsanaTaskApi implements TaskService
         }
 
         $dbData = [];
+        $now = date('Y-m-d H:i:s');
         //Format data for upsert
         foreach ($tasks as $task) {
             $dbTask = [];
@@ -67,7 +66,7 @@ class AsanaTaskApi implements TaskService
             $dbTask['created_at'] = date('Y-m-d H:i:s', strtotime($task['created_at']));
 
             $creator = $user;
-            if(isset($task['created_by']['gid']) && (string)$task['created_by']['gid'] !== (string)$user->task_user_id) {
+            if (isset($task['created_by']['gid']) && (string)$task['created_by']['gid'] !== (string)$user->task_user_id) {
                 $creator = User::firstWhere('task_user_id', $task['created_by']['gid']);
             }
             $dbTask['creator_user_id'] = $creator?->id;
@@ -100,14 +99,22 @@ class AsanaTaskApi implements TaskService
             }
 
             $dbTask['link'] = $task['permalink_url'];
+            $dbTask['updated_at'] = $now;
 
             $dbData[] = $dbTask;
         }
 
-        return Task::upsert($dbData,
+        $amount = Task::upsert($dbData,
             'id',
-            ['id', 'name', 'assigned_user_id', 'created_at', 'creator_user_id', 'completed', 'due', 'start', 'custom_fields', 'priority']
+            ['id', 'name', 'assigned_user_id', 'created_at', 'creator_user_id', 'completed', 'due', 'start', 'custom_fields', 'priority', 'updated_at']
         );
+
+        //delete tasks which are no longer assigned to the user
+        //todo: instead of delete set assigned_user_id = 0
+        //todo: change to imported_at because updated_at belongs to asana
+        $delete = Task::where('assigned_user_id', $user->id)->where('updated_at', '<', $now)->delete();
+        
+        return ['upsert' => $amount, 'delete' => $delete];
     }
 
     /**

@@ -44,8 +44,8 @@ class ImportTasks extends Command
         }
 
         try {
-            $amount = $this->taskService->importTasksForUser($user);
-            $this->info(sprintf('Successfully imported %d tasks', $amount));
+            $result = $this->taskService->importTasksForUser($user);
+            $this->info(sprintf('Successfully imported %d and deleted %d tasks.', $result['upsert'], $result['delete']));
         } catch (\Exception $e) {
             $this->error($e);
             return Command::FAILURE;
