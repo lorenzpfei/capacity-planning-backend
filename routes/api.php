@@ -31,10 +31,6 @@ Route::middleware('auth:sanctum')->controller(WorkloadController::class)->group(
     Route::get('/workload/{departmentId}/{from?}/{to?}', 'getWorkloadForDepartment');
 });
 
-Route::middleware('auth:sanctum')->controller(WorkloadController::class)->group(function () {
-    Route::get('/workload/{departmentId}/{from?}/{to?}', 'getWorkloadForDepartment');
-});
-
 Route::middleware('auth:sanctum')->get('/departments', function () {
     return Department::all();
 });
