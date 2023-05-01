@@ -44,7 +44,7 @@ class WorkloadService
         $today = new DateTime();
         $amountOfDays = (int)$today->diff($to)->format('%a') + 1; //include from and to
 
-        $workdataPerAppartment = [];
+        $workdataPerDepartment = [];
         foreach ($users as $user) {
             $this->tasks = new Collection();
             $this->timeoffs = new Collection();
@@ -61,9 +61,9 @@ class WorkloadService
                 $user->workloadSum->hoursContract += $day->hoursContract;
                 $user->workloadSum->hoursTimeoff += $day->hoursTimeoff;
             }
-            $workdataPerAppartment[] = $user;
+            $workdataPerDepartment[] = $user;
         }
-        return $workdataPerAppartment;
+        return $workdataPerDepartment;
     }
 
     /**
