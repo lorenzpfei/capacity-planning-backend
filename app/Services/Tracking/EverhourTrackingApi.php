@@ -19,7 +19,7 @@ class EverhourTrackingApi implements TrackingService
      * @param string $prefix Everhour Task Prefix (e.g. ev:)
      * @return void
      */
-    public function importTrackingDataForTasks(Collection $tasks, string $prefix = 'ev:')
+    public function importTrackingDataForTasks(Collection $tasks, string $prefix = 'ev:'): void
     {
         $updatedUsers = [];
 
@@ -56,7 +56,7 @@ class EverhourTrackingApi implements TrackingService
      * @param string $prefix Everhour Task Prefix (e.g. ev:)
      * @return array|mixed Everhour data or everhour error data
      */
-    public function getEverhourDataForTask(Task $task, string $prefix = 'ev:')
+    private function getEverhourDataForTask(Task $task, string $prefix = 'ev:')
     {
         $url = 'https://api.everhour.com/tasks/' . $prefix . $task->id;
         $request = Http::withHeaders([

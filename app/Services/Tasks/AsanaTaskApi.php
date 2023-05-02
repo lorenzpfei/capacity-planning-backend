@@ -113,7 +113,7 @@ class AsanaTaskApi implements TaskService
         //todo: instead of delete set assigned_user_id = 0
         //todo: change to imported_at because updated_at belongs to asana
         $delete = Task::where('assigned_user_id', $user->id)->where('updated_at', '<', $now)->delete();
-        
+
         return ['upsert' => $amount, 'delete' => $delete];
     }
 
@@ -123,7 +123,7 @@ class AsanaTaskApi implements TaskService
      * @param User $user User to get the workspaces for
      * @return array|mixed workspace data or asana error data
      */
-    public function getWorkspacesForUser(User $user)
+    private function getWorkspacesForUser(User $user)
     {
         return $this->get($user, '/workspaces');
     }
