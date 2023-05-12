@@ -89,6 +89,7 @@ class WorkloadService
             $date = date_timestamp_set(new DateTime(), $date);
             $activeContracts = new Collection();
 
+            //todo: Make this configurable
             if ($dayInWeek === 6 || $dayInWeek === 0) {
                 $i++;
                 $trackedHoursInWeek = 0; //prepare for week
