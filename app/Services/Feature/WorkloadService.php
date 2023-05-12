@@ -205,7 +205,7 @@ class WorkloadService
     }
 
     /**
-     * Checks left worktime and timeoffs and calculates left worktime for day
+     * Checks left worktime and timeoffs and calculates task time for day
      *
      * @param Task $task
      * @param DateTime $date
