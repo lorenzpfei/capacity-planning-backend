@@ -175,6 +175,8 @@ class WorkloadService
         $tasks = $this->tasks->whereNull('start')->whereNull('completed');
         $tasks = $tasks->merge($this->tasks->whereNotNull('start')->where('start', '>=', $date->format('Y-m-d')))->whereNull('completed');
 
+        //todo: Order tasks by due date (closest -> farthest) for better prioritization
+
         /** @var Task $task */
         foreach ($tasks as $task) {
             $taskHoursForDay = $this->getTaskHours($task, $date, $day);
