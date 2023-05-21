@@ -26,7 +26,20 @@ class OAuthController extends Controller
         try{
             $socialiteUser = Socialite::driver($provider)->stateless()->user();
         }catch(\Exception $e){
-            dd($e); //todo: Debug entfernen
+            dd($e); //todo: Remove debug
+        }
+
+        //check if email domain is on the whitelist
+        if(strlen(config('services.security.allowed_login_domains')) > 0)
+        {
+            $allowedDomains = explode(',', config('services.security.allowed_login_domains'));
+            $swag = $socialiteUser->getEmail();
+
+            $splitMail = explode('@', $swag);
+            $domainFromMail = end($splitMail);
+            if (!in_array($domainFromMail, $allowedDomains)) {
+                return redirect('/', 401, ['error', 'Your email domain is not allowed.']);
+            }
         }
 
         $taskProvider = config('services.provider.task');
@@ -50,10 +63,6 @@ class OAuthController extends Controller
             $user->tracking_token = $socialiteUser->token;
             $user->tracking_refresh_token = $socialiteUser->refreshToken;
             $user->tracking_user_id = $socialiteUser->getId();
-        }
-
-        if ($provider === $loginProvider) {
-            //$user->login_token = $socialiteUser->token;
         }
 
         if (isset($socialiteUser->getAvatar()["image_128x128"]) && $socialiteUser->getAvatar()["image_128x128"] !== null) {

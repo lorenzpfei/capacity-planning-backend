@@ -59,4 +59,7 @@ return [
     'frontend' => [
         'url' => env('FRONTEND_URL'),
     ],
+    'security' => [
+        'allowed_login_domains' => env('ALLOWED_LOGIN_DOMAINS')
+    ]
 ];
