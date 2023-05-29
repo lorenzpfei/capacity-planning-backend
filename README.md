@@ -31,3 +31,7 @@ respective interfaces. The concrete provider classes can be exchanged as desired
 perform correct calculations without adaptation.
 To add a new provider for tasks or tracking, create a new class in the corresponding directory
 in [/app/Services/](./app/Services) and implement the interface.
+
+## Development
+
+If you want to contribute to the project, you are welcome to do so. Known suggestions for improvement or bugs can be found in [Issues](https://github.com/lorenzpfei/capacity-planning-backend/issues).
