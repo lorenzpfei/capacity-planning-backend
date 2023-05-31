@@ -6,12 +6,14 @@ solution is flexible, ready for extensions and adaptability to other systems suc
 
 There is also a frontend which was developed for this calculation software. You can find it here: [capacity-planning-frontend](https://github.com/lorenzpfei/capacity-planning-frontend)
 
+
 ### Laravel
 
 This [Laravel](https://github.com/laravel/laravel) application calculates the capacities of teams in software
 development and makes them available via REST.
 For login, oAuth via [Socialite](https://github.com/laravel/socialite) is used. This is also used to integrate task and
 time tracking system providers.
+
 
 ### Authentication
 
@@ -23,6 +25,7 @@ and uses it to log the person in.
 The session is issued to a wildcard URL. Thus, the session can be accessed from the same domain, all directories and all
 subdomains. Separation of the domain between front-end and back-end is thus not natively possible.
 
+
 ### Providers
 
 In the application, the strategy pattern was implemented. The user requests the capacities for a department via the API.
@@ -31,6 +34,18 @@ respective interfaces. The concrete provider classes can be exchanged as desired
 perform correct calculations without adaptation.
 To add a new provider for tasks or tracking, create a new class in the corresponding directory
 in [/app/Services/](./app/Services) and implement the interface.
+
+
+## Getting started
+
+1. Start your mariadb database.
+2. Create your Environment File `cp .env.example .env` and configure your data.
+3. Run the database migrations `php artisan migrate`.
+4. Have users register by logging in through the oAuth endpoint.
+5. Import the tasks of the users by running `php artisan import:tasks [userId]`. If the tracking data can not be imported directly via the tasks provider, import the tracking data by running `php artisan import:trackings`.
+6. After that, import the time offs (vacation, sickness...) running `php artisan import:timeoffs`.
+7. Start the app running `php artisan serve` or [deploy](https://laravel.com/docs/10.x/deployment]) your app (Probably you have to overwrite `bootstrap/cache/config.php` again in production).
+
 
 ## Development
 
