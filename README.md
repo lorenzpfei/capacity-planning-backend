@@ -41,11 +41,11 @@ in [/app/Services/](./app/Services) and implement the interface.
 1. Start your mariadb database.
 2. Create your Environment File `cp .env.example .env` and configure your data.
 3. Install all project dependencies via `composer install`.
-5. Run the database migrations `php artisan migrate`.
-6. Have users register by logging in through the oAuth endpoint.
-7. Import the tasks of the users by running `php artisan import:tasks [userId]`. If the tracking data can not be imported directly via the tasks provider, import the tracking data by running `php artisan import:trackings`.
-8. After that, import the time offs (vacation, sickness...) running `php artisan import:timeoffs`.
-9. Start the app running `php artisan serve` or [deploy](https://laravel.com/docs/10.x/deployment]) your app (Probably you have to overwrite `bootstrap/cache/config.php` again in production).
+4. Run the database migrations `php artisan migrate`.
+5. Have users register by logging in through the oAuth endpoint.
+6. Import the tasks of the users by running `php artisan import:tasks [userId]`. If the tracking data can not be imported directly via the tasks provider, import the tracking data by running `php artisan import:trackings`.
+7. After that, import the time offs (vacation, sickness...) running `php artisan import:timeoffs`.
+8. Start the app running `php artisan serve` or [deploy](https://laravel.com/docs/10.x/deployment]) your app (Probably you have to overwrite `bootstrap/cache/config.php` again in production).
 
 
 ## Development
